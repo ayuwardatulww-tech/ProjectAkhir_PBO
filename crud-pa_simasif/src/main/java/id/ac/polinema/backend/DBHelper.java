@@ -1,15 +1,35 @@
 package id.ac.polinema.backend;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Properties;
 
 public class DBHelper {
-    private static final String URL = "jdbc:postgresql://localhost:5432/simasif_dup"; 
-    private static final String USER = "postgres";
-    private static final String PASS = "ayurisma";
+    private static final String URL;
+    private static final String USER;
+    private static final String PASS;
+
+    static {
+        Properties props = new Properties();
+        try (InputStream in = DBHelper.class.getClassLoader()
+                .getResourceAsStream("config.properties")) {
+            if (in == null) {
+                throw new RuntimeException(
+                    "config.properties tidak ditemukan. Salin dari config.properties.example");
+            }
+            props.load(in);
+        } catch (IOException e) {
+            throw new RuntimeException("Gagal membaca config.properties", e);
+        }
+        URL = props.getProperty("db.url");
+        USER = props.getProperty("db.user");
+        PASS = props.getProperty("db.password");
+    }
 
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASS);
