@@ -1,3 +1,8 @@
-db.url=jdbc:postgresql:jdbc:postgresql://localhost:5432/proyekakhir
+db.url=jdbc:postgresql://localhost:5432/proyekakhir
 db.user=postgres
 db.password=
+
+# Sesuaikan nama tabel dan kolom akun jika berbeda
+login.table=users
+login.username_column=username
+login.password_column=password

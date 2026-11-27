@@ -2,6 +2,10 @@ package id.ac.polinema.frontend;
 
 import java.awt.Color;
 import java.awt.Font;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
 import javax.swing.BorderFactory;
 import javax.swing.JButton;
@@ -13,6 +17,8 @@ import javax.swing.JPanel;
 import javax.swing.JPasswordField;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+
+import id.ac.polinema.backend.DBHelper;
 
 public class form_login {
     public static void main(String[] args) {
@@ -107,10 +113,45 @@ public class form_login {
                 return;
             }
 
-            JOptionPane.showMessageDialog(frame,
-                "Login berhasil untuk pengguna: " + username,
-                "Login Berhasil",
-                JOptionPane.INFORMATION_MESSAGE);
+            try (Connection connection = DBHelper.getConnection()) {
+                String table = DBHelper.getProperty("login.table", "users");
+                String usernameColumn = DBHelper.getProperty("login.username_column", "username");
+                String passwordColumn = DBHelper.getProperty("login.password_column", "password");
+
+                if (!table.matches("[a-zA-Z_][a-zA-Z0-9_]*")
+                    || !usernameColumn.matches("[a-zA-Z_][a-zA-Z0-9_]*")
+                    || !passwordColumn.matches("[a-zA-Z_][a-zA-Z0-9_]*")) {
+                    throw new SQLException("Nama tabel atau kolom login tidak valid pada config.properties");
+                }
+
+                String sql = "SELECT 1 FROM " + table
+                    + " WHERE " + usernameColumn + " = ? AND " + passwordColumn + " = ?";
+
+                try (PreparedStatement statement = connection.prepareStatement(sql)) {
+                    statement.setString(1, username);
+                    statement.setString(2, password);
+
+                    try (ResultSet result = statement.executeQuery()) {
+                        if (result.next()) {
+                            JOptionPane.showMessageDialog(frame,
+                                "Login berhasil untuk pengguna: " + username,
+                                "Login Berhasil",
+                                JOptionPane.INFORMATION_MESSAGE);
+                        } else {
+                            JOptionPane.showMessageDialog(frame,
+                                "Username atau password salah.",
+                                "Login Gagal",
+                                JOptionPane.ERROR_MESSAGE);
+                        }
+                    }
+                }
+            } catch (SQLException ex) {
+                JOptionPane.showMessageDialog(frame,
+                    "Gagal terhubung ke database: " + ex.getMessage(),
+                    "Database Error",
+                    JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
         });
 
         frame.getRootPane().setDefaultButton(btnLogin);

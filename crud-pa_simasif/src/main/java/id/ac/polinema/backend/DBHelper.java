@@ -10,29 +10,33 @@ import java.sql.Statement;
 import java.util.Properties;
 
 public class DBHelper {
+    private static final Properties PROPERTIES = new Properties();
     private static final String URL;
     private static final String USER;
     private static final String PASS;
 
     static {
-        Properties props = new Properties();
         try (InputStream in = DBHelper.class.getClassLoader()
                 .getResourceAsStream("config.properties")) {
             if (in == null) {
                 throw new RuntimeException(
                     "config.properties tidak ditemukan. Salin dari config.properties.example");
             }
-            props.load(in);
+            PROPERTIES.load(in);
         } catch (IOException e) {
             throw new RuntimeException("Gagal membaca config.properties", e);
         }
-        URL = props.getProperty("db.url");
-        USER = props.getProperty("db.user");
-        PASS = props.getProperty("db.password");
+        URL = PROPERTIES.getProperty("db.url");
+        USER = PROPERTIES.getProperty("db.user");
+        PASS = PROPERTIES.getProperty("db.password");
     }
 
     public static Connection getConnection() throws SQLException {
         return DriverManager.getConnection(URL, USER, PASS);
+    }
+
+    public static String getProperty(String key, String defaultValue) {
+        return PROPERTIES.getProperty(key, defaultValue);
     }
 
     private static void isiParameter(PreparedStatement ps, Object... params) throws SQLException {
